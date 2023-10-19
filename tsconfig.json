@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "composite": false,
+    "target": "esnext",
+    "lib": [
+      "esnext"
+    ],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "bump.config.ts",
+    "rollup.config.ts"
+  ],
+  "exclude": [
+    "dist/*"
+  ]
+}
