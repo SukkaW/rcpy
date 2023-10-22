@@ -35,17 +35,17 @@ import { copy } from 'rcpy'; // "copy" is an alias of "rcpy"
 })();
 ```
 
-- `src`: `string` the path of the file/directory to copy. Note that if `src` is a directory it will copy everything inside of this directory, not the entire directory itself.
-- `dest`: `string` the destination of the copied file/directory. Note that currently if `src` is a file, `dest` cannot be a directory. This behavior might be changed in the future.
+- `src`: `string` The path of the file/directory to copy. Note that if `src` is a directory it will copy everything inside of this directory, not the entire directory itself.
+- `dest`: `string` The destination of the copied file/directory. Note that currently if `src` is a file, `dest` cannot be a directory. This behavior might be changed in the future.
 - `option`: `RcpyOption` optional.
-  - `dereference`: `boolean` optional. whether to dereference symbolic links, default to `false`.
-  - `force`: `boolean` optional. whether to overwrite existing file/directory, default to `true`. Note that the copy operation will silently fail if you set this to false and the destination exists. Use the `errorOnExist` option to change this behavior.
+  - `dereference`: `boolean` optional. Whether to dereference symbolic links, default to `false`.
+  - `force`: `boolean` optional. Whether to overwrite existing file/directory, default to `true`. Note that the copy operation will silently fail if you set this to false and the destination exists. Use the `errorOnExist` option to change this behavior.
   - `overwrite`: `boolean` optional. Deprecated, now is the alias of `force`. Serves as a compatibility option for `fs-extra`.
-  - `errorOnExist`: `boolean` optional. whether to throw an error if `dest` already exists, default to `false`.
-  - `filter`: `(src: string, dest: string) => boolean | Promise<boolean>` optional. filter copied files/directories, return `true` to copy, `false` to skip.
-  - `mode`: `number` optional. modifiers for copy operation, default to `0`. See `mode` flag of [`fs.copyFile()`](https://nodejs.org/api/fs.html#fscopyfilesrc-dest-mode-callback)
-  - `preserveTimestamps`: `boolean` optional. whether to preserve file timestamps, default to `false`, where the behavior is OS-dependent.
-  - `concurrency`: `number` optional. the number of concurrent copy operations, default to `32`.
+  - `errorOnExist`: `boolean` optional. Whether to throw an error if `dest` already exists, default to `false`.
+  - `filter`: `(src: string, dest: string) => boolean | Promise<boolean>` optional. Filter copied files/directories, return `true` to copy, `false` to skip. When a directory is skipped, all of its contents will be skipped as well.
+  - `mode`: `number` optional. Modifiers for copy operation, default to `0`. See `mode` flag of [`fs.copyFile()`](https://nodejs.org/api/fs.html#fscopyfilesrc-dest-mode-callback)
+  - `preserveTimestamps`: `boolean` optional. Whether to preserve file timestamps, default to `false`, where the behavior is OS-dependent.
+  - `concurrency`: `number` optional. The number of concurrent copy operations, default to `32`.
 
 ## Differences between `rcpy` and `fs-extra`
 
@@ -56,10 +56,14 @@ import { copy } from 'rcpy'; // "copy" is an alias of "rcpy"
 
 ## Differences between `rcpy` and Node.js `fs.cp()`
 
+- Doesn't support `URL` for `src` and `dest`.
+  - PR is welcome to add `file://` support.
 - Doesn't support `recursive` option.
   - `rcpy` will always copy directories' content recursively.
+  - PR is welcome to add this option.
 - Doesn't support `verbatimSymlinks` option.
   - `rcpy` will always perform path resolution for symlinks if `dereference` option is enabled.
+  - PR is welcome to add this option.
 - Extra `concurrency` option.
   - `rcpy` will use this option to limit the number of concurrent copy operations to prevent `EMFILE` error.
 
