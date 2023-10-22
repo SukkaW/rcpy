@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import fsp from 'fs/promises';
-import { checkParentPaths, checkPaths, isSrcSubdir } from './util';
+import { checkParentPaths, checkPaths, isSrcSubdir, utimesMillis } from './util';
+import process from 'process';
 import { Sema } from 'async-sema';
 
 // const COPYFILE_EXCL = fs.constants.COPYFILE_EXCL;
@@ -9,20 +10,44 @@ import { Sema } from 'async-sema';
 type FilterFn = (src: string, dest: string) => boolean | Promise<boolean>;
 
 export interface RcpyOption {
+  /** @default false */
+  dereference?: boolean,
   filter?: FilterFn,
+  /** @default true */
+  force?: boolean,
+  /**
+   * @deprecated
+   * @default true
+   */
   overwrite?: boolean,
+  /** @default false */
+  preserveTimestamps?: boolean,
+  /** @default false */
   errorOnExist?: boolean,
+  /** @default 32 */
   concurrency?: number
 }
 
 const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<void> => {
   const _opt: Required<RcpyOption> = Object.assign({
+    dereference: false,
     filter: (_src: string, _dest: string) => true,
+    force: opt.overwrite ?? true,
     overwrite: true,
     errorOnExist: false,
+    preserveTimestamps: false,
     concurrency: 32
   }, opt);
   const filter = _opt.filter;
+
+  // Warn about using preserveTimestamps on 32-bit node
+  if (_opt.preserveTimestamps && process.arch === 'ia32') {
+    process.emitWarning(
+      'Using the preserveTimestamps option in 32-bit node is not recommended;\n\n'
+      + '\tsee https://github.com/jprichardson/node-fs-extra/issues/269',
+      'Warning', 'rcpy-WARN0001'
+    );
+  }
 
   if (!(await filter(src, dest))) {
     return;
@@ -30,13 +55,13 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
 
   const sema = new Sema(_opt.concurrency);
 
-  const checkResult = await checkPaths(src, dest);
+  const checkResult = await checkPaths(src, dest, _opt.dereference);
   const srcStat = checkResult[0];
 
   const destParent = path.resolve(path.dirname(dest));
   const destParentExists = fs.existsSync(destParent);
 
-  await checkParentPaths(src, srcStat, dest);
+  await checkParentPaths(src, srcStat, dest, _opt.dereference);
 
   if (!destParentExists) {
     await fsp.mkdir(destParent, { recursive: true });
@@ -68,13 +93,31 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
 
   async function copyFile(srcStat: fs.Stats, src: string, dest: string) {
     await fsp.copyFile(src, dest);
+
+    if (_opt.preserveTimestamps) {
+      // Make sure the file is writable before setting the timestamp
+      // otherwise open fails with EPERM when invoked with 'r+'
+      // (through utimes call)
+      if (fileIsNotWritable(srcStat.mode)) {
+        await makeFileWritable(dest, srcStat.mode);
+      }
+
+      // Set timestamps and mode correspondingly
+
+      // Note that The initial srcStat.atime cannot be trusted
+      // because it is modified by the read(2) system call
+      // (See https://nodejs.org/api/fs.html#fs_stat_time_values)
+      const updatedSrcStat = await fsp.stat(src);
+      await utimesMillis(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
+    }
+
     return fsp.chmod(dest, srcStat.mode);
   }
 
   async function onFile(srcStat: fs.Stats, destStat: fs.Stats | null, src: string, dest: string) {
     if (!destStat) return copyFile(srcStat, src, dest);
 
-    if (_opt.overwrite) {
+    if (_opt.force) {
       await fsp.unlink(dest);
       return copyFile(srcStat, src, dest);
     }
@@ -99,7 +142,7 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
         return;
       }
 
-      return performCopy(srcItem, destItem, await checkPaths(srcItem, destItem));
+      return performCopy(srcItem, destItem, await checkPaths(srcItem, destItem, _opt.dereference));
     }));
 
     if (!destStat) {
@@ -108,7 +151,11 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
   }
 
   async function onLink(src: string, dest: string, destStat: fs.Stats | null) {
-    const resolvedSrc = await fsp.readlink(src);
+    let resolvedSrc = await fsp.readlink(src);
+
+    if (_opt.dereference) {
+      resolvedSrc = path.resolve(process.cwd(), resolvedSrc);
+    }
 
     if (!destStat) {
       return fsp.symlink(resolvedSrc, dest);
@@ -124,6 +171,10 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
       // fs throws error anyway, so no need to guard against it here.
       if (err.code === 'EINVAL' || err.code === 'UNKNOWN') return fsp.symlink(resolvedSrc, dest);
       throw e;
+    }
+
+    if (_opt.dereference) {
+      resolvedDest = path.resolve(process.cwd(), resolvedDest);
     }
 
     if (isSrcSubdir(resolvedSrc, resolvedDest)) {
@@ -142,5 +193,13 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
 
   return performCopy(src, dest, checkResult);
 };
+
+function fileIsNotWritable(srcMode: number) {
+  return (srcMode & 0o200) === 0;
+}
+
+function makeFileWritable(dest: string, srcMode: number) {
+  return fsp.chmod(dest, srcMode | 0o200);
+}
 
 export { rcpy, rcpy as copy };

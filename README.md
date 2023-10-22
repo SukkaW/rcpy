@@ -38,19 +38,20 @@ import { copy } from 'rcpy'; // "copy" is an alias of "rcpy"
 - `src`: `string` the path of the file/directory to copy. Note that if `src` is a directory it will copy everything inside of this directory, not the entire directory itself.
 - `dest`: `string` the destination of the copied file/directory. Note that currently if `src` is a file, `dest` cannot be a directory. This behavior might be changed in the future.
 - `option`: `RcpyOption` optional.
-  - `overwrite`: `boolean` optional. whether to overwrite existing file/directory, default to `true`. Note that the copy operation will silently fail if you set this to false and the destination exists. Use the `errorOnExist` option to change this behavior.
+  - `dereference`: `boolean` optional. whether to dereference symbolic links, default to `false`.
+  - `force`: `boolean` optional. whether to overwrite existing file/directory, default to `true`. Note that the copy operation will silently fail if you set this to false and the destination exists. Use the `errorOnExist` option to change this behavior.
+  - `overwrite`: `boolean` optional. The alias of `force`, serves as a compatibility option for `fs-extra`.
   - `errorOnExist`: `boolean` optional. whether to throw an error if `dest` already exists, default to `false`.
   - `filter`: `(src: string, dest: string) => boolean | Promise<boolean>` optional. filter copied files/directories, return `true` to copy, `false` to skip.
+  - `preserveTimestamps`: `boolean` optional. whether to preserve file timestamps, default to `false`, where the behavior is OS-dependent.
   - `concurrency`: `number` optional. the number of concurrent copy operations, default to `32`.
-
 
 ## Differences between `rcpy` and `fs-extra`
 
 - Doesn't use `graceful-fs` to prevent `EMFILE` error.
   - `rcpy` instead provides a `concurrency` option to limit the number of concurrent copy operations.
 - Asynchronous and Promise-based API only. No synchronous API, no Node.js callback style API.
-- Doesn't support `preserveTimestamps` option. The timestamp behavior is OS-dependent.
-- Doesn't support `dereference` option. Symbolic links are always dereferenced.
+  - Use `require('util').callbackify` to convert `rcpy` to Node.js callback style API.P
 
 ## License
 

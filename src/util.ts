@@ -1,6 +1,11 @@
 import fs from 'fs';
 import fsp from 'fs/promises';
 import path from 'path';
+import { promisify } from 'util';
+
+const futimes = promisify(fs.futimes);
+const open = promisify(fs.open);
+const close = promisify(fs.close);
 
 export const areIdentical = (srcStat: fs.Stats, destStat: fs.Stats) => destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev;
 
@@ -14,9 +19,10 @@ export function isSrcSubdir(src: string, dest: string) {
   return dest.startsWith(src);
 }
 
-export async function checkPaths(src: string, dest: string) {
-  const srcStat = await fsp.lstat(src);
-  const destStat: fs.Stats | null = fs.existsSync(dest) ? await fsp.lstat(dest) : null;
+export async function checkPaths(src: string, dest: string, dereference: boolean) {
+  const statFn = dereference ? fsp.lstat : fsp.stat;
+  const srcStat = await statFn(src);
+  const destStat: fs.Stats | null = fs.existsSync(dest) ? await statFn(dest) : null;
 
   const srcIsDir = srcStat.isDirectory();
 
@@ -44,17 +50,45 @@ export async function checkPaths(src: string, dest: string) {
 // It works for all file types including symlinks since it
 // checks the src and dest inodes. It starts from the deepest
 // parent and stops once it reaches the src parent or the root path.
-export async function checkParentPaths(src: string, srcStat: fs.Stats, dest: string) {
+export async function checkParentPaths(src: string, srcStat: fs.Stats, dest: string, dereference: boolean) {
   const srcParent = path.resolve(path.dirname(src));
   const destParent = path.resolve(path.dirname(dest));
   if (destParent === srcParent || destParent === path.parse(destParent).root) return;
 
   if (!fs.existsSync(destParent)) return;
 
-  const destParentStat = await fsp.lstat(destParent);
+  const statFn = dereference ? fsp.lstat : fsp.stat;
+  const destParentStat = await statFn(destParent);
   if (areIdentical(srcStat, destParentStat)) {
     throw new Error(`Cannot copy '${src}' to a subdirectory of itself, '${dest}'.`);
   }
 
-  return checkParentPaths(src, srcStat, destParent);
+  return checkParentPaths(src, srcStat, destParent, dereference);
+}
+
+export async function utimesMillis(path: string, atime: fs.TimeLike, mtime: fs.TimeLike) {
+  // if (!HAS_MILLIS_RES) return fs.utimes(path, atime, mtime, callback)
+  const fd = await open(path, 'r+');
+
+  let futimesErr = null;
+  try {
+    await futimes(fd, atime, mtime);
+  } catch (e) {
+    futimesErr = e;
+  }
+
+  let closeErr = null;
+
+  try {
+    await close(fd);
+  } catch (e) {
+    closeErr = e;
+  }
+
+  if (futimesErr) {
+    throw futimesErr;
+  }
+  if (closeErr) {
+    throw closeErr;
+  }
 }
