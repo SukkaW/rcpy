@@ -91,28 +91,16 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
 
     const items = await fsp.readdir(src);
 
-    const promises: Array<Promise<void>> = [];
-
-    // loop through the files in the current directory to copy everything
-    for (let i = 0, len = items.length; i < len; i++) {
-      const item = items[i];
-
+    await Promise.all(items.map(async item => {
       const srcItem = path.join(src, item);
       const destItem = path.join(dest, item);
 
-      promises.push(
-        Promise.resolve(filter(srcItem, destItem))
-          .then(shouldCopy => {
-            if (!shouldCopy) return;
+      if (!(await filter(srcItem, destItem))) {
+        return;
+      }
 
-            // If the item is a copyable file, `getStatsAndPerformCopy` will copy it
-            // If the item is a directory, `getStatsAndPerformCopy` will call `onDir` recursively
-            return checkPaths(srcItem, destItem).then(result => performCopy(srcItem, destItem, result));
-          })
-      );
-    }
-
-    await Promise.all(promises);
+      return performCopy(srcItem, destItem, await checkPaths(srcItem, destItem));
+    }));
 
     if (!destStat) {
       await fsp.chmod(dest, srcStat.mode);

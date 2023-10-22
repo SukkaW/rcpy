@@ -15,7 +15,17 @@ export default defineConfig([
       { file: 'dist/index.mjs', format: 'es' }
     ],
     plugins: [
-      swc()
+      swc({
+        minify: true,
+        isModule: true,
+        jsc: {
+          minify: {
+            compress: true,
+            mangle: true,
+            module: true
+          }
+        }
+      })
     ],
     external
   },
