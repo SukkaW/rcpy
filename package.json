@@ -1,6 +1,6 @@
 {
   "name": "rcpy",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0",
   "description": "Lightweight, fast, simple and flexible file copy utility for Node.js",
   "homepage": "https://github.com/SukkaW/rcpy#readme",
   "repository": {
