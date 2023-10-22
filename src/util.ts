@@ -7,9 +7,11 @@ export const areIdentical = (srcStat: fs.Stats, destStat: fs.Stats) => destStat.
 // return true if dest is a subdir of src, otherwise false.
 // It only checks the path strings.
 export function isSrcSubdir(src: string, dest: string) {
-  const srcArr = path.resolve(src).split(path.sep).filter(Boolean);
-  const destArr = path.resolve(dest).split(path.sep).filter(Boolean);
-  return srcArr.every((cur, i) => destArr[i] === cur);
+  // const srcArr = path.resolve(src).split(path.sep).filter(Boolean);
+  // const destArr = path.resolve(dest).split(path.sep).filter(Boolean);
+
+  // return srcArr.every((cur, i) => destArr[i] === cur);
+  return dest.startsWith(src);
 }
 
 export async function checkPaths(src: string, dest: string) {
