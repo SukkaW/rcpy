@@ -20,7 +20,7 @@ export function isSrcSubdir(src: string, dest: string) {
 }
 
 export async function checkPaths(src: string, dest: string, dereference: boolean) {
-  const statFn = dereference ? fsp.lstat : fsp.stat;
+  const statFn = dereference ? fsp.stat : fsp.lstat;
   const srcStat = await statFn(src);
   const destStat: fs.Stats | null = fs.existsSync(dest) ? await statFn(dest) : null;
 
@@ -57,7 +57,7 @@ export async function checkParentPaths(src: string, srcStat: fs.Stats, dest: str
 
   if (!fs.existsSync(destParent)) return;
 
-  const statFn = dereference ? fsp.lstat : fsp.stat;
+  const statFn = dereference ? fsp.stat : fsp.lstat;
   const destParentStat = await statFn(destParent);
   if (areIdentical(srcStat, destParentStat)) {
     throw new Error(`Cannot copy '${src}' to a subdirectory of itself, '${dest}'.`);
