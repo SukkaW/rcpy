@@ -40,9 +40,10 @@ import { copy } from 'rcpy'; // "copy" is an alias of "rcpy"
 - `option`: `RcpyOption` optional.
   - `dereference`: `boolean` optional. whether to dereference symbolic links, default to `false`.
   - `force`: `boolean` optional. whether to overwrite existing file/directory, default to `true`. Note that the copy operation will silently fail if you set this to false and the destination exists. Use the `errorOnExist` option to change this behavior.
-  - `overwrite`: `boolean` optional. The alias of `force`, serves as a compatibility option for `fs-extra`.
+  - `overwrite`: `boolean` optional. Deprecated, now is the alias of `force`. Serves as a compatibility option for `fs-extra`.
   - `errorOnExist`: `boolean` optional. whether to throw an error if `dest` already exists, default to `false`.
   - `filter`: `(src: string, dest: string) => boolean | Promise<boolean>` optional. filter copied files/directories, return `true` to copy, `false` to skip.
+  - `mode`: `number` optional. modifiers for copy operation, default to `0`. See `mode` flag of [`fs.copyFile()`](https://nodejs.org/api/fs.html#fscopyfilesrc-dest-mode-callback)
   - `preserveTimestamps`: `boolean` optional. whether to preserve file timestamps, default to `false`, where the behavior is OS-dependent.
   - `concurrency`: `number` optional. the number of concurrent copy operations, default to `32`.
 
@@ -52,6 +53,15 @@ import { copy } from 'rcpy'; // "copy" is an alias of "rcpy"
   - `rcpy` instead provides a `concurrency` option to limit the number of concurrent copy operations.
 - Asynchronous and Promise-based API only. No synchronous API, no Node.js callback style API.
   - Use `require('util').callbackify` to convert `rcpy` to Node.js callback style API.P
+
+## Differences between `rcpy` and Node.js `fs.cp()`
+
+- Doesn't support `recursive` option.
+  - `rcpy` will always copy directories' content recursively.
+- Doesn't support `verbatimSymlinks` option.
+  - `rcpy` will always perform path resolution for symlinks if `dereference` option is enabled.
+- Extra `concurrency` option.
+  - `rcpy` will use this option to limit the number of concurrent copy operations to prevent `EMFILE` error.
 
 ## License
 

@@ -20,6 +20,8 @@ export interface RcpyOption {
    * @default true
    */
   overwrite?: boolean,
+  /** @default 0 */
+  mode?: number,
   /** @default false */
   preserveTimestamps?: boolean,
   /** @default false */
@@ -35,6 +37,7 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
     force: opt.overwrite ?? true,
     overwrite: true,
     errorOnExist: false,
+    mode: 0,
     preserveTimestamps: false,
     concurrency: 32
   }, opt);
@@ -92,7 +95,7 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
   }
 
   async function copyFile(srcStat: fs.Stats, src: string, dest: string) {
-    await fsp.copyFile(src, dest);
+    await fsp.copyFile(src, dest, _opt.mode);
 
     if (_opt.preserveTimestamps) {
       // Make sure the file is writable before setting the timestamp
