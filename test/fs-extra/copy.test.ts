@@ -5,7 +5,6 @@ import { copy } from '../../src';
 import path from 'path';
 import crypto from 'crypto';
 import { ensureFileSync } from '../test-utils';
-import { setTimeout as wait } from 'timers/promises';
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -15,6 +14,8 @@ chai.use(chaiAsPromised);
 const { expect } = chai;
 
 const SIZE = 16 * 64 * 1024 + 7;
+
+const wait = (ms: number) => new Promise(resolve => { setTimeout(resolve, ms); });
 
 describe('rcpy', () => {
   let TEST_DIR = '';
