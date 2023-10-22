@@ -1,0 +1,32 @@
+import { defineConfig } from 'rollup';
+import { swc } from 'rollup-plugin-swc3';
+import { dts } from 'rollup-plugin-dts';
+import { builtinModules, createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const external = builtinModules.concat(Object.keys(require('./package.json').dependencies));
+
+export default defineConfig([
+  {
+    input: 'src/index.ts',
+    output: [
+      { file: 'dist/index.js', format: 'cjs' },
+      { file: 'dist/index.cjs', format: 'cjs' },
+      { file: 'dist/index.mjs', format: 'es' }
+    ],
+    plugins: [
+      swc()
+    ],
+    external
+  },
+  {
+    input: 'src/index.ts',
+    output: [
+      { file: 'dist/index.d.ts', format: 'es' }
+    ],
+    plugins: [
+      dts()
+    ],
+    external
+  }
+]);

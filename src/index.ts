@@ -103,11 +103,11 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
       promises.push(
         Promise.resolve(filter(srcItem, destItem))
           .then(shouldCopy => {
-            if (shouldCopy) {
-              // If the item is a copyable file, `getStatsAndPerformCopy` will copy it
-              // If the item is a directory, `getStatsAndPerformCopy` will call `onDir` recursively
-              return checkPaths(srcItem, destItem).then(result => performCopy(srcItem, destItem, result));
-            }
+            if (!shouldCopy) return;
+
+            // If the item is a copyable file, `getStatsAndPerformCopy` will copy it
+            // If the item is a directory, `getStatsAndPerformCopy` will call `onDir` recursively
+            return checkPaths(srcItem, destItem).then(result => performCopy(srcItem, destItem, result));
           })
       );
     }
