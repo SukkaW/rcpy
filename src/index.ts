@@ -135,18 +135,20 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
       await fsp.mkdir(dest);
     }
 
-    const items = await fsp.readdir(src);
+    const promises: Array<Promise<void>> = [];
 
-    await Promise.all(items.map(async item => {
-      const srcItem = path.join(src, item);
-      const destItem = path.join(dest, item);
+    for await (const item of await fsp.opendir(src)) {
+      const srcItem = path.join(src, item.name);
+      const destItem = path.join(dest, item.name);
 
       if (!(await filter(srcItem, destItem))) {
-        return;
+        continue;
       }
 
-      return performCopy(srcItem, destItem, await checkPaths(srcItem, destItem, _opt.dereference));
-    }));
+      promises.push(performCopy(srcItem, destItem, await checkPaths(srcItem, destItem, _opt.dereference)));
+    }
+
+    await Promise.all(promises);
 
     if (!destStat) {
       await fsp.chmod(dest, srcStat.mode);
