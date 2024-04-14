@@ -26,7 +26,7 @@
     "build": "rollup -c --configPlugin swc3",
     "lint": "eslint --format=sukka .",
     "test": "mocha -r @swc-node/register test/**/*.test.ts",
-    "release": "bumpp -r --all --commit=\"release: %s\" --tag=\"%s\""
+    "release": "bumpp -r --all --commit \"release: %s\" --tag \"%s\""
   },
   "keywords": [
     "copy",
@@ -52,7 +52,7 @@
     "@types/chai-as-promised": "^7.1.7",
     "@types/mocha": "^10.0.3",
     "@types/node": "^20.8.7",
-    "bumpp": "^9.2.0",
+    "bumpp": "^9.4.0",
     "chai": "^4.3.10",
     "chai-as-promised": "^7.1.1",
     "eslint": "^8.52.0",
