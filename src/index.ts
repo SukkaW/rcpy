@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import { checkParentPaths, checkPaths, isSrcSubdir, utimesMillis } from './util';
 import process from 'node:process';
-import { Sema } from 'async-sema';
+import { newQueue } from '@henrygd/queue';
 
 // const COPYFILE_EXCL = fs.constants.COPYFILE_EXCL;
 
@@ -56,7 +56,7 @@ async function rcpy(src: string, dest: string, opt: RcpyOption = {}): Promise<vo
     return;
   }
 
-  const sema = new Sema(_opt.concurrency);
+  const queue = newQueue(_opt.concurrency);
 
   const checkResult = await checkPaths(src, dest, _opt.dereference);
   const srcStat = checkResult[0];
@@ -72,23 +72,17 @@ async function rcpy(src: string, dest: string, opt: RcpyOption = {}): Promise<vo
 
   async function performCopy(src: string, dest: string, [srcStat, destStat, srcIsDir]: readonly [fs.Stats, fs.Stats | null, boolean]) {
     if (srcIsDir) {
-      await sema.acquire();
-      await onDir(srcStat, destStat, src, dest);
-      return sema.release();
+      return queue.add(() => onDir(srcStat, destStat, src, dest));
     }
     if (
       srcStat.isFile()
       || srcStat.isCharacterDevice()
       || srcStat.isBlockDevice()
     ) {
-      await sema.acquire();
-      await onFile(srcStat, destStat, src, dest);
-      return sema.release();
+      return queue.add(() => onFile(srcStat, destStat, src, dest));
     }
     if (srcStat.isSymbolicLink()) {
-      await sema.acquire();
-      await onLink(src, dest, destStat);
-      return sema.release();
+      return queue.add(() => onLink(src, dest, destStat));
     }
 
     throw new Error(`Can not copy '${src}', incompatible file type`);
