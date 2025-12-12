@@ -6,16 +6,11 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { ensureFileSync } from '../test-utils';
 
-import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import { wait } from 'foxts/wait';
 
-chai.use(chaiAsPromised);
-
-const { expect } = chai;
+import { expect } from 'expect';
 
 const SIZE = 16 * 64 * 1024 + 7;
-
-const wait = (ms: number) => new Promise(resolve => { setTimeout(resolve, ms); });
 
 describe('rcpy', () => {
   let TEST_DIR = '';
@@ -35,7 +30,7 @@ describe('rcpy', () => {
       const fileDest = path.join(TEST_DIR, 'TEST_fs-extra_copy');
       ensureFileSync(fileSrc);
 
-      await expect(copy(fileSrc, fileDest)).to.be.rejectedWith('Source and destination must not be the same.');
+      await expect(copy(fileSrc, fileDest)).rejects.toThrow('Source and destination must not be the same.');
     });
 
     it('should error when overwrite=false and file exists', async () => {
@@ -45,7 +40,7 @@ describe('rcpy', () => {
       ensureFileSync(src);
       ensureFileSync(dest);
 
-      await expect(copy(src, dest, { overwrite: false, errorOnExist: true })).to.be.rejected;
+      await expect(copy(src, dest, { overwrite: false, errorOnExist: true })).rejects.toThrow();
     });
 
     it('should error when overwrite=false and file exists in a dir', async () => {
@@ -55,7 +50,7 @@ describe('rcpy', () => {
       ensureFileSync(src);
       ensureFileSync(dest);
 
-      await expect(copy(src, dest, { overwrite: false, errorOnExist: true })).to.be.rejected;
+      await expect(copy(src, dest, { overwrite: false, errorOnExist: true })).rejects.toThrow();
     });
 
     describe('> when src is a file', () => {
@@ -66,10 +61,10 @@ describe('rcpy', () => {
 
         const srcMd5 = crypto.createHash('md5').update(fs.readFileSync(fileSrc)).digest('hex');
         await copy(fileSrc, fileDest);
-        expect(fs.existsSync(fileDest)).to.equal(true, fileDest);
+        expect(fs.existsSync(fileDest)).toBe(true);
         const destMd5 = crypto.createHash('md5').update(fs.readFileSync(fileDest)).digest('hex');
 
-        expect(srcMd5).to.equal(destMd5, `src: ${srcMd5} dest: ${destMd5}`);
+        expect(srcMd5).toBe(destMd5);
       });
 
       it('should work with promises', async () => {
@@ -82,14 +77,14 @@ describe('rcpy', () => {
         await copy(fileSrc, fileDest);
         destMd5 = crypto.createHash('md5').update(fs.readFileSync(fileDest)).digest('hex');
 
-        expect(srcMd5).to.equal(destMd5);
+        expect(srcMd5).toBe(destMd5);
       });
 
       it('should return an error if src file does not exist', async () => {
         const fileSrc = 'we-simply-assume-this-file-does-not-exist.bin';
         const fileDest = path.join(TEST_DIR, 'TEST_fs-extra_copy');
 
-        await expect(copy(fileSrc, fileDest)).to.be.rejected;
+        await expect(copy(fileSrc, fileDest)).rejects.toThrow();
       });
 
       it('should copy to a destination file with two \'$\' characters in name (eg: TEST_fs-extra_$$_copy)', async () => {
@@ -115,7 +110,7 @@ describe('rcpy', () => {
           } catch { }
 
           const data2 = fs.readFileSync(dest, 'utf8');
-          expect(data).to.equal(data2);
+          expect(data).toBe(data2);
         });
       });
 
@@ -126,7 +121,7 @@ describe('rcpy', () => {
           ensureFileSync(src);
           fs.mkdirSync(dest, { recursive: true });
 
-          await expect(copy(src, dest)).to.be.rejectedWith(`Cannot overwrite directory '${dest}' with non-directory '${src}'.`);
+          await expect(copy(src, dest)).rejects.toThrow(`Cannot overwrite directory '${dest}' with non-directory '${src}'.`);
         });
       });
     });
@@ -136,7 +131,7 @@ describe('rcpy', () => {
         it('should return an error', async () => {
           const ts = path.join(TEST_DIR, 'this_dir_does_not_exist');
           const td = path.join(TEST_DIR, 'this_dir_really_does_not_matter');
-          await expect(copy(ts, td)).to.be.rejected;
+          await expect(copy(ts, td)).rejects.toThrow();
         });
       });
 
@@ -148,7 +143,7 @@ describe('rcpy', () => {
           fs.writeFileSync(path.join(src, 'index.txt'), '');
           fs.writeFileSync(dest, '');
 
-          await expect(copy(src, dest)).to.be.rejectedWith(`Cannot overwrite non-directory '${dest}' with directory '${src}'.`);
+          await expect(copy(src, dest)).rejects.toThrow(`Cannot overwrite non-directory '${dest}' with directory '${src}'.`);
         });
       });
 
@@ -165,7 +160,7 @@ describe('rcpy', () => {
         await copy(src, dest);
 
         const link = fs.readlinkSync(path.join(dest, 'symlink'));
-        expect(link).to.equal(srcTarget);
+        expect(link).toBe(srcTarget);
       });
 
       it('should copy the directory asynchronously', async () => {
@@ -185,18 +180,18 @@ describe('rcpy', () => {
 
         await copy(src, dest);
 
-        expect(fs.existsSync(dest)).to.equal(true, dest);
+        expect(fs.existsSync(dest)).toBe(true);
 
         for (let i = 0; i < FILES; ++i) {
           const p = path.join(subdir, i.toString());
-          expect(fs.existsSync(p)).to.equal(true, p);
+          expect(fs.existsSync(p)).toBe(true);
         }
 
         const destSub = path.join(dest, 'subdir');
 
         await copy(src, dest);
         for (let j = 0; j < FILES; ++j) {
-          expect(fs.existsSync(path.join(destSub, j.toString()))).to.equal(true);
+          expect(fs.existsSync(path.join(destSub, j.toString()))).toBe(true);
         }
       });
 
@@ -217,14 +212,14 @@ describe('rcpy', () => {
           const o1 = fs.readFileSync(path.join(dest, 'f1.txt'), 'utf8');
           const o2 = fs.readFileSync(path.join(dest, 'f2.txt'), 'utf8');
 
-          expect(d1).to.equal(o1);
-          expect(d2).to.equal(o2);
+          expect(d1).toBe(o1);
+          expect(d2).toBe(o2);
         });
       });
 
       describe('> when src dir does not exist', () => {
         it('should return an error', async () => {
-          await expect(copy('/does/not/exist', '/something/else')).to.be.rejected;
+          await expect(copy('/does/not/exist', '/something/else')).rejects.toThrow();
         });
       });
     });
@@ -240,7 +235,7 @@ describe('rcpy', () => {
         const filter = (s: string) => path.extname(s) !== '.css' && !fs.statSync(s).isDirectory();
 
         await copy(srcFile, destFile, { filter });
-        expect(fs.existsSync(destDir)).to.equal(false, destDir);
+        expect(fs.existsSync(destDir)).toBe(false);
       });
 
       it('should only copy files allowed by filter fn', async () => {
@@ -250,7 +245,7 @@ describe('rcpy', () => {
         const filter = (s: string) => s.split('.').pop() !== 'css';
 
         await copy(srcFile1, destFile1, { filter });
-        expect(fs.existsSync(destFile1)).to.equal(false);
+        expect(fs.existsSync(destFile1)).toBe(false);
       });
 
       it('should not call filter fn more than needed', async () => {
@@ -265,8 +260,8 @@ describe('rcpy', () => {
         };
 
         await copy(src, dest, { filter });
-        expect(filterCallCount).to.equal(1);
-        expect(fs.existsSync(dest)).to.equal(true);
+        expect(filterCallCount).toBe(1);
+        expect(fs.existsSync(dest)).toBe(true);
       });
 
       it('accepts options object in place of filter', async () => {
@@ -275,7 +270,7 @@ describe('rcpy', () => {
         const destFile1 = path.join(TEST_DIR, 'dest1.jade');
 
         await copy(srcFile1, destFile1, { filter: (s: string) => /.html$|.css$/i.test(s) });
-        expect(fs.existsSync(destFile1)).to.equal(false);
+        expect(fs.existsSync(destFile1)).toBe(false);
       });
 
       it('allows filter fn to return a promise', async () => {
@@ -286,7 +281,7 @@ describe('rcpy', () => {
         // TODO: filter return promise
         await copy(srcFile1, destFile1, { filter });
 
-        expect(fs.existsSync(destFile1)).to.equal(false);
+        expect(fs.existsSync(destFile1)).toBe(false);
       });
 
       it('should apply filter recursively', async () => {
@@ -310,18 +305,18 @@ describe('rcpy', () => {
         // Don't match anything that ends with a digit higher than 0:
         await copy(src, dest, { filter: (s: string) => /[\D0]$/.test(s) });
 
-        expect(fs.existsSync(dest)).to.equal(true, dest);
+        expect(fs.existsSync(dest)).toBe(true);
 
         for (let i = 0; i < FILES; ++i) {
           const p = path.join(dest, i.toString());
-          expect(fs.existsSync(p)).to.equal(i === 0, p);
+          expect(fs.existsSync(p)).toBe(i === 0);
         }
 
         const destSub = path.join(dest, 'subdir');
 
         for (let j = 0; j < FILES; ++j) {
           const p = path.join(destSub, j.toString());
-          expect(fs.existsSync(p)).to.equal(j === 0, p);
+          expect(fs.existsSync(p)).toBe(j === 0);
         }
       });
     });
@@ -341,8 +336,8 @@ describe('rcpy', () => {
       const dest = path.join(TEST_DIR, 'dest');
 
       await copy(src, dest, { filter });
-      expect(fs.existsSync(path.join(dest, IGNORE))).to.equal(false);
-      expect(fs.existsSync(path.join(dest, IGNORE, 'file'))).to.equal(false);
+      expect(fs.existsSync(path.join(dest, IGNORE))).toBe(false);
+      expect(fs.existsSync(path.join(dest, IGNORE, 'file'))).toBe(false);
     });
 
     it('should apply filter when it is applied only to dest', async () => {
@@ -361,7 +356,7 @@ describe('rcpy', () => {
 
       await copy(src, dest, { filter });
 
-      expect(fs.existsSync(path.join(dest, 'subdir'))).to.equal(false);
+      expect(fs.existsSync(path.join(dest, 'subdir'))).toBe(false);
     });
 
     it('should apply filter when it is applied to both src and dest', async () => {
@@ -385,13 +380,13 @@ describe('rcpy', () => {
       const destFile3 = path.join(dest, 'dest3.jade');
 
       await copy(srcFile1, destFile1);
-      expect(fs.existsSync(destFile1)).to.equal(true, destFile1);
+      expect(fs.existsSync(destFile1)).toBe(true);
 
       await copy(srcFile2, destFile2, { filter });
-      expect(fs.existsSync(destFile2)).to.equal(false, destFile2);
+      expect(fs.existsSync(destFile2)).toBe(false);
 
       await copy(srcFile3, destFile3, { filter });
-      expect(fs.existsSync(destFile3)).to.equal(true, destFile3);
+      expect(fs.existsSync(destFile3)).toBe(true);
     });
   });
 });
