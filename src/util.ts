@@ -1,7 +1,7 @@
-import fs from 'fs';
-import fsp from 'fs/promises';
-import path from 'path';
-import { promisify } from 'util';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+import { promisify } from 'node:util';
 
 const futimes = promisify(fs.futimes);
 const open = promisify(fs.open);
@@ -86,9 +86,9 @@ export async function utimesMillis(path: string, atime: fs.TimeLike, mtime: fs.T
   }
 
   if (futimesErr) {
-    throw futimesErr;
+    throw futimesErr as Error;
   }
   if (closeErr) {
-    throw closeErr;
+    throw closeErr as Error;
   }
 }

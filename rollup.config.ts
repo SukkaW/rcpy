@@ -1,7 +1,7 @@
 import { defineConfig } from 'rollup';
 import { swc } from 'rollup-plugin-swc3';
 import { dts } from 'rollup-plugin-dts';
-import { builtinModules, createRequire } from 'module';
+import { builtinModules, createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const external = builtinModules.concat(Object.keys(require('./package.json').dependencies));

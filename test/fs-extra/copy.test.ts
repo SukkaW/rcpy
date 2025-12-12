@@ -1,9 +1,9 @@
-import fs from 'fs';
-import fsp from 'fs/promises';
-import os from 'os';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import os from 'node:os';
 import { copy } from '../../src';
-import path from 'path';
-import crypto from 'crypto';
+import path from 'node:path';
+import crypto from 'node:crypto';
 import { ensureFileSync } from '../test-utils';
 
 import chai from 'chai';
@@ -237,9 +237,7 @@ describe('rcpy', () => {
         fs.writeFileSync(srcFile, 'src contents');
         const destDir = path.join(TEST_DIR, 'dest');
         const destFile = path.join(destDir, 'destfile.css');
-        const filter = (s: string) => {
-          return path.extname(s) !== '.css' && !fs.statSync(s).isDirectory();
-        };
+        const filter = (s: string) => path.extname(s) !== '.css' && !fs.statSync(s).isDirectory();
 
         await copy(srcFile, destFile, { filter });
         expect(fs.existsSync(destDir)).to.equal(false, destDir);
@@ -293,9 +291,6 @@ describe('rcpy', () => {
 
       it('should apply filter recursively', async () => {
         const FILES = 2;
-        // Don't match anything that ends with a digit higher than 0:
-        const filter = (s: string) => /(0|\D)$/i.test(s);
-
         const src = path.join(TEST_DIR, 'src');
         fs.mkdirSync(src);
 
@@ -311,7 +306,9 @@ describe('rcpy', () => {
         }
 
         const dest = path.join(TEST_DIR, 'dest');
-        await copy(src, dest, { filter });
+
+        // Don't match anything that ends with a digit higher than 0:
+        await copy(src, dest, { filter: (s: string) => /[\D0]$/.test(s) });
 
         expect(fs.existsSync(dest)).to.equal(true, dest);
 

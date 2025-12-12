@@ -1,8 +1,8 @@
-import path from 'path';
-import fs from 'fs';
-import fsp from 'fs/promises';
+import path from 'node:path';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
 import { checkParentPaths, checkPaths, isSrcSubdir, utimesMillis } from './util';
-import process from 'process';
+import process from 'node:process';
 import { Sema } from 'async-sema';
 
 // const COPYFILE_EXCL = fs.constants.COPYFILE_EXCL;
@@ -30,7 +30,7 @@ export interface RcpyOption {
   concurrency?: number
 }
 
-const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<void> => {
+async function rcpy(src: string, dest: string, opt: RcpyOption = {}): Promise<void> {
   const _opt: Required<RcpyOption> = Object.assign({
     dereference: false,
     filter: (_src: string, _dest: string) => true,
@@ -197,7 +197,7 @@ const rcpy = async (src: string, dest: string, opt: RcpyOption = {}): Promise<vo
   }
 
   return performCopy(src, dest, checkResult);
-};
+}
 
 function fileIsNotWritable(srcMode: number) {
   return (srcMode & 0o200) === 0;

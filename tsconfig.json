@@ -5,7 +5,8 @@
     "lib": [
       "esnext"
     ],
-    "moduleResolution": "node",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "noEmit": true,
     "isolatedModules": true,
@@ -21,8 +22,7 @@
   "include": [
     "src/**/*.ts",
     "test/**/*.ts",
-    "bump.config.ts",
-    "rollup.config.ts"
+    "bump.config.ts"
   ],
   "exclude": [
     "dist/*"
