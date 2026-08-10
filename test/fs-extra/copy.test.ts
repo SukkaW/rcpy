@@ -269,7 +269,7 @@ describe('rcpy', () => {
         fs.writeFileSync(srcFile1, '');
         const destFile1 = path.join(TEST_DIR, 'dest1.jade');
 
-        await copy(srcFile1, destFile1, { filter: (s: string) => /.html$|.css$/i.test(s) });
+        await copy(srcFile1, destFile1, { filter: (s: string) => s.endsWith('.html') || s.endsWith('.css') });
         expect(fs.existsSync(destFile1)).toEqual(false);
       });
 
@@ -303,7 +303,12 @@ describe('rcpy', () => {
         const dest = path.join(TEST_DIR, 'dest');
 
         // Don't match anything that ends with a digit higher than 0:
-        await copy(src, dest, { filter: (s: string) => /[\D0]$/.test(s) });
+        await copy(src, dest, {
+          filter(s: string) {
+            const lastChar = s.at(-1);
+            return lastChar !== undefined && !'123456789'.includes(lastChar);
+          }
+        });
 
         expect(fs.existsSync(dest)).toEqual(true);
 

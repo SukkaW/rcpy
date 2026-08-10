@@ -44,33 +44,22 @@
     "@henrygd/queue": "^1.2.0"
   },
   "devDependencies": {
-    "@eslint-sukka/node": "^8.7.0",
-    "@swc-node/register": "^1.11.1",
-    "@swc/core": "^1.15.13",
+    "@eslint-sukka/node": "^9.0.1",
+    "@swc-node/register": "^1.12.1",
+    "@swc/core": "^1.15.47",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^20.19.33",
+    "@types/node": "^20.19.43",
     "bumpp": "^10.4.1",
     "earl": "^2.0.0",
-    "eslint": "^9.39.3",
-    "eslint-config-sukka": "^8.7.0",
-    "eslint-formatter-sukka": "^8.7.0",
-    "foxts": "^5.3.0",
-    "mocha": "^11.7.5",
-    "rollup": "^4.59.0",
-    "rollup-plugin-dts": "^6.3.0",
+    "eslint": "^10.8.1",
+    "eslint-config-sukka": "^9.0.1",
+    "eslint-formatter-sukka": "^9.0.1",
+    "foxts": "^5.9.1",
+    "mocha": "^11.8.0",
+    "rollup": "^4.62.4",
+    "rollup-plugin-dts": "^6.5.1",
     "rollup-plugin-swc3": "^0.12.1",
     "typescript": "^5.9.3"
   },
-  "packageManager": "pnpm@10.30.2",
-  "overrides": {
-    "array-includes": "npm:@nolyfill/array-includes@latest",
-    "array.prototype.findlastindex": "npm:@nolyfill/array.prototype.findlastindex@latest",
-    "array.prototype.flat": "npm:@nolyfill/array.prototype.flat@latest",
-    "array.prototype.flatmap": "npm:@nolyfill/array.prototype.flatmap@latest",
-    "has": "npm:@nolyfill/has@latest",
-    "object.fromentries": "npm:@nolyfill/object.fromentries@latest",
-    "object.groupby": "npm:@nolyfill/object.groupby@latest",
-    "object.values": "npm:@nolyfill/object.values@latest",
-    "rollup": "$rollup"
-  }
+  "packageManager": "pnpm@11.21.0"
 }
