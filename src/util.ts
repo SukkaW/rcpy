@@ -52,18 +52,24 @@ export async function checkPaths(src: string, dest: string, dereference: boolean
 // parent and stops once it reaches the src parent or the root path.
 export async function checkParentPaths(src: string, srcStat: fs.Stats, dest: string, dereference: boolean) {
   const srcParent = path.resolve(path.dirname(src));
-  const destParent = path.resolve(path.dirname(dest));
-  if (destParent === srcParent || destParent === path.parse(destParent).root) return;
-
-  if (!fs.existsSync(destParent)) return;
-
+  let destParent = path.resolve(path.dirname(dest));
   const statFn = dereference ? fsp.stat : fsp.lstat;
-  const destParentStat = await statFn(destParent);
-  if (areIdentical(srcStat, destParentStat)) {
-    throw new Error(`Cannot copy '${src}' to a subdirectory of itself, '${dest}'.`);
+  const destParents: string[] = [];
+
+  while (destParent !== srcParent && destParent !== path.parse(destParent).root) {
+    if (!fs.existsSync(destParent)) return;
+
+    destParents.push(destParent);
+    destParent = path.resolve(path.dirname(destParent));
   }
 
-  return checkParentPaths(src, srcStat, destParent, dereference);
+  const destParentStats = await Promise.all(destParents.map(statFn));
+  for (let i = 0, len = destParentStats.length; i < len; i++) {
+    const destParentStat = destParentStats[i];
+    if (areIdentical(srcStat, destParentStat)) {
+      throw new Error(`Cannot copy '${src}' to a subdirectory of itself, '${dest}'.`);
+    }
+  }
 }
 
 export async function utimesMillis(path: string, atime: fs.TimeLike, mtime: fs.TimeLike) {
