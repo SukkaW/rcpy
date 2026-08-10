@@ -4,6 +4,7 @@ import fsp from 'node:fs/promises';
 import { checkParentPaths, checkPaths, isSrcSubdir, utimesMillis } from './util';
 import process from 'node:process';
 import { newQueue } from '@henrygd/queue';
+import { missingBit, setBit } from 'foxts/bitwise';
 
 // const COPYFILE_EXCL = fs.constants.COPYFILE_EXCL;
 
@@ -194,11 +195,11 @@ async function rcpy(src: string, dest: string, opt: RcpyOption = {}): Promise<vo
 }
 
 function fileIsNotWritable(srcMode: number) {
-  return (srcMode & 0o200) === 0;
+  return missingBit(srcMode, 0o200);
 }
 
 function makeFileWritable(dest: string, srcMode: number) {
-  return fsp.chmod(dest, srcMode | 0o200);
+  return fsp.chmod(dest, setBit(srcMode, 0o200));
 }
 
 export { rcpy, rcpy as copy };
