@@ -7,7 +7,11 @@ const futimes = promisify(fs.futimes);
 const open = promisify(fs.open);
 const close = promisify(fs.close);
 
-export const areIdentical = (srcStat: fs.Stats, destStat: fs.Stats) => destStat.ino && destStat.dev && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev;
+export function areIdentical(srcStat: fs.Stats | fs.BigIntStats, destStat: fs.Stats | fs.BigIntStats): boolean {
+  if (destStat.ino === 0 || destStat.dev === 0) return false;
+  if (destStat.ino === 0n || destStat.dev === 0n) return false;
+  return destStat.ino === srcStat.ino && destStat.dev === srcStat.dev;
+}
 
 // return true if dest is a subdir of src, otherwise false.
 // It only checks the path strings.

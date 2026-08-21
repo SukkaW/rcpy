@@ -11,15 +11,18 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+          cache: true
       - uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
+          node-version-file: ".node-version"
           check-latest: true
-          cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-      - run: npm install -g npm
+          package-manager-cache: false
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm config set --location=global minimumReleaseAge
       - run: pnpm install
       - run: pnpm run build
       - name: Publish
